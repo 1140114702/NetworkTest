@@ -6,6 +6,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
@@ -16,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -44,17 +50,46 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
-                            .url("http://10.0.2.2/get_data.xml")
+                            .url("http://192.168.133.2/get_data.json")
                             .build();
                     Response response = client.newCall(request).execute();
                     String responseData = response.body().string();
-                    parseXmlWithPull(responseData);
+//                    parseXmlWithPull(responseData);
+//                    parseJSONWithJSONObject(responseData);
+                    parseJSONWithGSON(responseData);
 //                    showResponse(responseData);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }).start();
+    }
+
+    private void parseJSONWithGSON(String responseData) {
+        Gson gson = new Gson();
+        List<JSONBean> list = gson.fromJson(responseData, new TypeToken<List<JSONBean>>(){}.getType());
+        for (JSONBean bean : list){
+            Log.e("binbin", "id is "+bean.getId());
+            Log.e("binbin", "name is "+bean.getName());
+            Log.e("binbin", "version is "+bean.getVersion());
+        }
+    }
+
+    private void parseJSONWithJSONObject(String responseData) {
+        try {
+            JSONArray jsonArray = new JSONArray(responseData);
+            for (int i = 0; i < responseData.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id = jsonObject.getString("id");
+                String name = jsonObject.getString("name");
+                String version = jsonObject.getString("version");
+                Log.e("binbin", "id is "+id);
+                Log.e("binbin", "name is "+name);
+                Log.e("binbin", "version is "+version);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void parseXmlWithPull(String xmlData) {
@@ -83,9 +118,9 @@ public class MainActivity extends AppCompatActivity {
                     //完成解析某个节点
                     case XmlPullParser.END_TAG:{
                         if ("app".equals(nodeName)) {
-                            Log.e("binbin", "id is"+id);
-                            Log.e("binbin", "name is"+name);
-                            Log.e("binbin", "version is"+version);
+                            Log.e("binbin", "id is "+id);
+                            Log.e("binbin", "name is "+name);
+                            Log.e("binbin", "version is "+version);
                         }
                         break;
                     }
